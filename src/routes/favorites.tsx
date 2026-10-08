@@ -22,7 +22,7 @@ function Favorites() {
   const favs = useStore((s) => s.favorites);
   const bms = useStore((s) => s.bookmarks);
   const items = [...favs.map((k) => ({ k, fav: true })), ...bms.filter((k) => !favs.includes(k)).map((k) => ({ k, fav: false }))]
-    .sort((a, b) => { const [as, aa] = a.k.split(":").map(Number); const [bs, ba] = b.k.split(":").map(Number); return as - bs || aa - ba; });
+    .sort((a, b) => { const [as = 0, aa = 0] = a.k.split(":").map(Number); const [bs = 0, ba = 0] = b.k.split(":").map(Number); return as - bs || aa - ba; });
   return (
     <div>
       <PageHeader title={t("favorites")} />
@@ -33,7 +33,7 @@ function Favorites() {
       ) : (
         <ul className="px-3">
           {items.map(({ k }) => {
-            const [s, a] = k.split(":").map(Number);
+            const [s = 1, a = 1] = k.split(":").map(Number);
             return (
               <li key={k}>
                 <Link to="/surah/$id" params={{ id: String(s) }} hash={`a${a}`} className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-card">
