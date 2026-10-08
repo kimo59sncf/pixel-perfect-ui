@@ -47,22 +47,49 @@ export const surahQuery = (n: number, lang: Lang, reciter: string) =>
   });
 
 export type SearchHit = { s: number; a: number; text: string };
-export const searchQuery = (q: string, lang: Lang) =>
+
+const isArabic = (q: string) => /[\u0600-\u06FF]/.test(q);
+// Diacritic/letter-form insensitive normalisation (Arabic + Latin accents).
+export const normalize = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .toLowerCase();
+
+type Indexed = { s: number; a: number; text: string; norm: string };
+export const editionQuery = (ed: string) =>
   queryOptions({
-    queryKey: ["search", q, lang],
-    enabled: q.trim().length > 2,
+    queryKey: ["edition", ed],
     staleTime: Infinity,
-    queryFn: async (): Promise<SearchHit[]> => {
-      const ed = TRANSLATIONS[lang]?.id ?? "quran-simple-clean";
-      const res = await fetch(`${API}/search/${encodeURIComponent(q.trim())}/all/${ed}`);
-      if (res.status === 404) return [];
+    gcTime: Infinity,
+    queryFn: async (): Promise<Indexed[]> => {
+      const res = await fetch(`${API}/quran/${ed}`);
       if (!res.ok) throw new Error("network");
       const { data } = await res.json();
-      return (data?.matches ?? []).slice(0, 100).map((m: { surah: { number: number }; numberInSurah: number; text: string }) => ({
-        s: m.surah.number, a: m.numberInSurah, text: m.text,
-      }));
+      const out: Indexed[] = [];
+      for (const su of data.surahs) for (const a of su.ayahs) out.push({ s: su.number, a: a.numberInSurah, text: a.text, norm: normalize(a.text) });
+      return out;
     },
   });
+
+export const searchEdition = (q: string, lang: Lang) =>
+  isArabic(q) ? "quran-simple-clean" : TRANSLATIONS[lang]?.id ?? TRANSLATIONS.fr!.id;
+
+export function runSearch(index: Indexed[], q: string): SearchHit[] {
+  const n = normalize(q.trim());
+  if (n.length < 2) return [];
+  const hits: SearchHit[] = [];
+  for (const r of index) {
+    if (r.norm.includes(n)) { hits.push({ s: r.s, a: r.a, text: r.text }); if (hits.length >= 200) break; }
+  }
+  return hits;
+}
 
 export const surahName = (s: Surah, lang: Lang) => (lang === "ar" ? s.ar : s.tr);
 export const surah = (n: number): Surah => SURAHS[Math.min(Math.max(n, 1), 114) - 1]!;

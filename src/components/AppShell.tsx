@@ -19,6 +19,17 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
     document.documentElement.dir = dir;
   }, [lang, dir]);
+  useEffect(() => {
+    // Offline support only on the real site (never inside the editor preview).
+    const inFrame = window.self !== window.top;
+    const preview = /id-preview|lovableproject|localhost/.test(location.hostname);
+    if (!("serviceWorker" in navigator)) return;
+    if (inFrame || preview || !import.meta.env.PROD) {
+      navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister()));
+      return;
+    }
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }, []);
   return (
     <div className="mx-auto min-h-screen max-w-3xl pb-40">
       {children}
