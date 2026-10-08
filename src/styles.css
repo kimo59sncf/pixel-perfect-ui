@@ -81,6 +81,6 @@
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 @utility font-quran { font-family: var(--font-quran); }
 @utility pattern {
-  background-image: radial-gradient(oklch(1 0 0 / 0.08) 1px, transparent 1px);
-  background-size: 14px 14px;
+  background-image: radial-gradient(oklch(1 0 0 / 0.06) 1px, transparent 1.5px);
+  background-size: 18px 18px;
 }

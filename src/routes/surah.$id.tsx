@@ -84,8 +84,9 @@ function Reader() {
 
 function stripBasmala(s: number, a: Ayah) {
   // The Tanzil text prefixes ayah 1 with the basmala for surahs other than 1 and 9; it is shown separately above.
-  const b = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ";
-  return s !== 1 && a.n === 1 && a.ar.startsWith(b) ? a.ar.slice(b.length) : a.ar;
+  if (s === 1 || s === 9 || a.n !== 1) return a.ar;
+  const words = a.ar.replace(/^\uFEFF/, "").split(" ");
+  return words[0]?.startsWith("بِس") && words.length > 4 ? words.slice(4).join(" ") : a.ar;
 }
 
 function AyahCard({ s, a, showTr, active, playing, onPlay }: { s: number; a: Ayah; showTr: boolean; active: boolean; playing: boolean; onPlay: () => void }) {
@@ -107,22 +108,23 @@ function AyahCard({ s, a, showTr, active, playing, onPlay }: { s: number; a: Aya
   useEffect(() => { if (active) ref.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [active]);
 
   const text = `${a.ar}\n${a.tr ?? ""}\n— ${surah(s).tr} ${s}:${a.n}`;
-  const btn = "rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted";
+  const btn = "rounded-full p-2 transition-colors hover:bg-muted";
+  const off = "text-muted-foreground";
   return (
     <article ref={ref} id={`a${a.n}`} className={`scroll-mt-24 rounded-2xl px-3 py-6 transition-colors ${active ? "bg-accent/60" : ""}`}>
       <div className="mb-4 flex items-center gap-1">
         <span className="me-auto rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">{num(s)}:{num(a.n)}</span>
-        <button aria-label={playing ? t("pause") : t("play")} onClick={onPlay} className={`${btn} ${active ? "text-primary" : ""}`}>
+        <button aria-label={playing ? t("pause") : t("play")} onClick={onPlay} className={`${btn} ${active ? "text-primary" : off}`}>
           {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </button>
-        <button aria-label={t("favorite")} aria-pressed={fav} onClick={() => setState((st) => ({ favorites: toggleIn(st.favorites, key) }))} className={`${btn} ${fav ? "text-favorite" : ""}`}>
+        <button aria-label={t("favorite")} aria-pressed={fav} onClick={() => setState((st) => ({ favorites: toggleIn(st.favorites, key) }))} className={`${btn} ${fav ? "text-favorite" : off}`}>
           <Heart className="h-4 w-4" fill={fav ? "currentColor" : "none"} />
         </button>
-        <button aria-label={t("bookmark")} aria-pressed={bm} onClick={() => setState((st) => ({ bookmarks: toggleIn(st.bookmarks, key) }))} className={`${btn} ${bm ? "text-gold" : ""}`}>
+        <button aria-label={t("bookmark")} aria-pressed={bm} onClick={() => setState((st) => ({ bookmarks: toggleIn(st.bookmarks, key) }))} className={`${btn} ${bm ? "text-gold" : off}`}>
           <Bookmark className="h-4 w-4" fill={bm ? "currentColor" : "none"} />
         </button>
-        <button aria-label={t("copy")} onClick={() => navigator.clipboard.writeText(text).then(() => toast.success(t("copied")))} className={btn}><Copy className="h-4 w-4" /></button>
-        <button aria-label={t("share")} onClick={() => (navigator.share ? navigator.share({ text }).catch(() => {}) : navigator.clipboard.writeText(text).then(() => toast.success(t("copied"))))} className={btn}><Share2 className="h-4 w-4" /></button>
+        <button aria-label={t("copy")} onClick={() => navigator.clipboard.writeText(text).then(() => toast.success(t("copied")))} className={`${btn} ${off}`}><Copy className="h-4 w-4" /></button>
+        <button aria-label={t("share")} onClick={() => (navigator.share ? navigator.share({ text }).catch(() => {}) : navigator.clipboard.writeText(text).then(() => toast.success(t("copied"))))} className={`${btn} ${off}`}><Share2 className="h-4 w-4" /></button>
       </div>
       <p dir="rtl" lang="ar" className="font-quran text-right leading-[2.2]" style={{ fontSize: size }}>
         {stripBasmala(s, a)} <span className="text-gold">﴿{a.n.toLocaleString("ar-EG")}﴾</span>
