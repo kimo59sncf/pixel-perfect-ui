@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { setState, useStore } from "@/lib/store";
-import { searchQuery, SURAHS, surah } from "@/lib/quran";
+import { editionQuery, runSearch, searchEdition, surah } from "@/lib/quran";
 import { PageHeader } from "@/components/AppShell";
 
 export const Route = createFileRoute("/search")({
@@ -29,11 +29,14 @@ function SearchPage() {
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");
   const history = useStore((s) => s.searchHistory);
-  useEffect(() => { const id = setTimeout(() => setQ(input.trim()), 400); return () => clearTimeout(id); }, [input]);
+  useEffect(() => { const id = setTimeout(() => setQ(input.trim()), 300); return () => clearTimeout(id); }, [input]);
   useEffect(() => {
-    if (q.length > 2) setState((s) => ({ searchHistory: [q, ...s.searchHistory.filter((h) => h !== q)].slice(0, 8) }));
+    if (q.length > 1) setState((s) => ({ searchHistory: [q, ...s.searchHistory.filter((h) => h !== q)].slice(0, 8) }));
   }, [q]);
-  const r = useQuery(searchQuery(q, lang));
+  const ed = searchEdition(q, lang);
+  const idx = useQuery({ ...editionQuery(ed), enabled: q.length > 1 });
+  const data = useMemo(() => (idx.data && q.length > 1 ? runSearch(idx.data, q) : undefined), [idx.data, q]);
+  const r = { isFetching: idx.isFetching && !idx.data, isError: idx.isError, data };
   return (
     <div>
       <PageHeader title={t("search")}>
