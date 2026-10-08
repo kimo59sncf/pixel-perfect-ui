@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bookmark, Heart } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
-import { SURAHS } from "@/lib/quran";
+import { SURAHS, surah } from "@/lib/quran";
 import { PageHeader } from "@/components/AppShell";
 
 export const Route = createFileRoute("/favorites")({
@@ -37,7 +37,7 @@ function Favorites() {
             return (
               <li key={k}>
                 <Link to="/surah/$id" params={{ id: String(s) }} hash={`a${a}`} className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-card">
-                  <span className="flex-1 font-semibold">{SURAHS[s - 1].tr} <span className="font-normal text-muted-foreground">· {t("ayah")} {num(a)}</span></span>
+                  <span className="flex-1 font-semibold">{surah(s).tr} <span className="font-normal text-muted-foreground">· {t("ayah")} {num(a)}</span></span>
                   {favs.includes(k) && <Heart className="h-4 w-4 text-favorite" fill="currentColor" aria-label={t("favorite")} />}
                   {bms.includes(k) && <Bookmark className="h-4 w-4 text-gold" fill="currentColor" aria-label={t("bookmark")} />}
                 </Link>

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, Headphones } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
-import { RECITERS, SURAHS } from "@/lib/quran";
+import { RECITERS, SURAHS, surah } from "@/lib/quran";
 import { SurahRow } from "@/components/AppShell";
 
 export const Route = createFileRoute("/")({
@@ -79,7 +79,7 @@ function Home() {
 
 function ContinueCard({ icon, label, pos }: { icon: React.ReactNode; label: string; pos: { s: number; a: number } }) {
   const { t, num } = useT();
-  const s = SURAHS[pos.s - 1];
+  const s = surah(pos.s);
   return (
     <Link to="/surah/$id" params={{ id: String(pos.s) }} hash={`a${pos.a}`} className="flex items-center gap-4 rounded-2xl border bg-card p-4 shadow-soft">
       <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground">{icon}</span>

@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { BookOpen, Heart, Home, Pause, Play, Search, Settings, SkipBack, SkipForward, X, RotateCw } from "lucide-react";
 import { useT, type TKey } from "@/lib/i18n";
 import { usePlayer } from "@/lib/player";
-import { SURAHS } from "@/lib/quran";
+import { SURAHS, surah } from "@/lib/quran";
 
 const tabs: { to: "/" | "/surahs" | "/search" | "/favorites" | "/settings"; icon: typeof Home; k: TKey }[] = [
   { to: "/", icon: Home, k: "home" },
@@ -48,7 +48,7 @@ function MiniPlayer() {
   const { t, num, lang } = useT();
   const tr = p.queue[p.index];
   if (!tr) return null;
-  const s = SURAHS[tr.s - 1];
+  const s = surah(tr.s);
   return (
     <div className="fixed inset-x-0 bottom-[62px] z-20 px-3">
       <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-foreground text-background shadow-soft">
@@ -81,7 +81,7 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
 
 export function SurahRow({ n }: { n: number }) {
   const { t, num, lang } = useT();
-  const s = SURAHS[n - 1];
+  const s = surah(n);
   return (
     <Link to="/surah/$id" params={{ id: String(n) }} className="flex items-center gap-4 rounded-xl px-4 py-3 transition-colors hover:bg-card">
       <span className="grid h-10 w-10 shrink-0 rotate-45 place-items-center rounded-lg border border-gold/50 text-xs font-semibold text-gold">

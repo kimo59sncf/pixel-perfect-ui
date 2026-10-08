@@ -5,7 +5,7 @@ import { Bookmark, ChevronLeft, ChevronRight, Copy, Heart, Pause, Play, Share2 }
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { setState, toggleIn, useStore } from "@/lib/store";
-import { surahQuery, SURAHS, type Ayah } from "@/lib/quran";
+import { surahQuery, SURAHS, surah, type Ayah } from "@/lib/quran";
 import { usePlayer } from "@/lib/player";
 
 export const Route = createFileRoute("/surah/$id")({
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/surah/$id")({
 
 function Reader() {
   const n = Number(Route.useParams().id);
-  const s = SURAHS[n - 1];
+  const s = surah(n);
   const { t, num, lang } = useT();
   const reciter = useStore((x) => x.reciter);
   const showTr = useStore((x) => x.showTranslation);
@@ -45,7 +45,7 @@ function Reader() {
   }, [q.data]);
 
   const play = (i: number) => q.data && p.playQueue(q.data.map((a) => ({ s: n, a: a.n, url: a.audio })), i);
-  const current = p.queue[p.index]?.s === n ? p.queue[p.index].a : null;
+  const current = p.queue[p.index]?.s === n ? p.queue[p.index]!.a : null;
 
   return (
     <div>
@@ -99,14 +99,14 @@ function AyahCard({ s, a, showTr, active, playing, onPlay }: { s: number; a: Aya
 
   useEffect(() => {
     const el = ref.current; if (!el || seen) return;
-    const io = new IntersectionObserver(([e]) => {
+    const io = new IntersectionObserver((entries) => { const e = entries[0]; if (!e) return;
       if (e.isIntersecting) { setSeen(true); setState((st) => (st.lastRead?.s === s && st.lastRead.a >= a.n ? {} : { lastRead: { s, a: a.n } })); }
     }, { threshold: 0.8 });
     io.observe(el); return () => io.disconnect();
   }, [s, a.n, seen]);
   useEffect(() => { if (active) ref.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [active]);
 
-  const text = `${a.ar}\n${a.tr ?? ""}\n— ${SURAHS[s - 1].tr} ${s}:${a.n}`;
+  const text = `${a.ar}\n${a.tr ?? ""}\n— ${surah(s).tr} ${s}:${a.n}`;
   const btn = "rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted";
   return (
     <article ref={ref} id={`a${a.n}`} className={`scroll-mt-24 rounded-2xl px-3 py-6 transition-colors ${active ? "bg-accent/60" : ""}`}>

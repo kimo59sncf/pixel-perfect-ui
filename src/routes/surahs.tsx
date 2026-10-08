@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
-import { SURAHS } from "@/lib/quran";
+import { SURAHS, surah } from "@/lib/quran";
 import { PageHeader, SurahRow } from "@/components/AppShell";
 
 export const Route = createFileRoute("/surahs")({
