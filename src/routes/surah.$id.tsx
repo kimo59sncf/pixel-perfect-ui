@@ -49,7 +49,7 @@ function Reader() {
 
   return (
     <div>
-      <header className="bg-hero pattern m-3 rounded-3xl px-6 py-8 text-center text-primary-foreground">
+      <header className="bg-hero m-3 rounded-3xl px-6 py-8 text-center text-primary-foreground">
         <div className="flex items-center justify-between text-sm opacity-80">
           {n > 1 ? <Link to="/surah/$id" params={{ id: String(n - 1) }} aria-label={t("prev")}><ChevronLeft className="h-5 w-5 rtl:rotate-180" /></Link> : <span />}
           <span>{num(n)}</span>

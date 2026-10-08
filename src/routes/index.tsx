@@ -38,7 +38,7 @@ function Home() {
 
   return (
     <div>
-      <section className="bg-hero pattern relative m-3 overflow-hidden rounded-3xl px-6 pb-8 pt-10 text-primary-foreground">
+      <section className="bg-hero relative m-3 overflow-hidden rounded-3xl px-6 pb-8 pt-10 text-primary-foreground">
         <p className="text-xs uppercase tracking-widest opacity-75">{date ? `${date.g} · ${date.h}` : "\u00a0"}</p>
         <h1 className="mt-3 text-4xl font-semibold">{date ? t(date.morning ? "morning" : "evening") : "\u00a0"}</h1>
         <p className="mt-1 opacity-80">{t("tagline")}</p>
