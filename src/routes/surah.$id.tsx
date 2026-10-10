@@ -20,7 +20,7 @@ export const Route = createFileRoute("/surah/$id")({
   head: ({ params }) => {
     const s = SURAHS[Number(params.id) - 1];
     const title = s ? `Sourate ${s.tr} (${s.ar}) — CoranProFree` : "CoranProFree";
-    const desc = s ? `Lire et écouter la sourate ${s.tr} — ${s.en}, ${s.ayahs} versets.` : "";
+    const desc = s ? `Lire et écouter la sourate ${s.tr} — ${s.ayahs} versets.` : "";
     return { meta: [{ property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { title }, { name: "description", content: desc }, { property: "og:title", content: title }, { property: "og:description", content: desc }] };
   },
   component: Reader,
@@ -79,7 +79,7 @@ function Reader() {
 
           <p dir="rtl" className="font-quran mt-5 text-4xl text-gold drop-shadow-sm">{s.ar}</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">{s.tr}</h1>
-          <p className="mt-1 text-sm text-white/80">{lang !== "ar" && `${s.en} · `}{num(s.ayahs)} {t("ayahs")} · {t(s.type === "Meccan" ? "meccan" : "medinan")}</p>
+          <p className="mt-1 text-sm text-white/80">{lang === "en" && `${s.en} · `}{num(s.ayahs)} {t("ayahs")} · {t(s.type === "Meccan" ? "meccan" : "medinan")}</p>
 
           <div className="mt-6 flex items-center justify-center gap-3">
             <button onClick={() => (current !== null ? p.toggle() : play(0))} disabled={!q.data && current === null} className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-gold-foreground shadow-lg transition-transform hover:scale-[1.03] disabled:opacity-50">

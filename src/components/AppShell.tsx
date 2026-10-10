@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { BookOpen, CloudCheck, Heart, Home, Pause, Play, Search, Settings, SkipBack, SkipForward, Shuffle, X, RotateCw, ChevronsRight } from "lucide-react";
+import { BookOpen, CloudCheck, Heart, Home, Pause, Play, Repeat, Search, Settings, SkipBack, SkipForward, Shuffle, X, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SurahActions } from "@/components/LibraryControls";
 import { useDownload } from "@/lib/downloads";
 import { useT, type TKey } from "@/lib/i18n";
 import { usePlayer } from "@/lib/player-context";
-import { surah } from "@/lib/quran";
+import { RECITERS, surah, surahName } from "@/lib/quran";
 import { useOnline } from "@/lib/offline";
 import { useStore } from "@/lib/store";
 
@@ -68,26 +68,35 @@ export function AppShell({ children }: { children: ReactNode }) {
 function MiniPlayer() {
   const p = usePlayer();
   const { t, num, lang } = useT();
+  const reciterId = useStore((s) => s.reciter);
   const tr = p.queue[p.index];
   if (!tr) return null;
   const s = surah(tr.s);
+  const reciterInfo = RECITERS.find((r) => r.id === reciterId);
+  const reciterName = (lang === "ar" ? reciterInfo?.ar : reciterInfo?.name) ?? reciterId;
+  const repeatOrder = ["off", "ayah", "surah"] as const;
+  const cycleRepeat = () => {
+    const next = repeatOrder[(repeatOrder.indexOf(p.repeat) + 1) % repeatOrder.length] ?? "off";
+    p.setRepeat(next);
+  };
+  const repeatLabel = t(p.repeat === "off" ? "repeatOff" : p.repeat === "ayah" ? "repeatAyah" : "repeatSurah");
   return (
-    <div className="fixed inset-x-0 bottom-[62px] z-20 px-3">
+    <div className="fixed inset-x-0 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-20 px-3">
       <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-foreground text-background shadow-soft">
         <div className="h-0.5 bg-gold" style={{ width: `${p.progress * 100}%` }} />
-        <div className="flex items-center gap-2 p-2.5">
+        <div className="flex items-center gap-1 p-2.5">
           <Link to="/surah/$id" params={{ id: String(tr.s) }} className="min-w-0 flex-1 px-1">
-            <div className="truncate text-sm font-semibold">{lang === "ar" ? s.ar : s.tr}</div>
-            <div className="text-xs opacity-70">{t("ayah")} {num(tr.a)}{p.error && ` · ${t("error")}`}</div>
+            <div className="truncate text-sm font-semibold">{surahName(s, lang)}</div>
+            <div className="truncate text-xs opacity-70">{reciterName} · {t("ayah")} {num(tr.a)}{p.error && ` · ${t("error")}`}</div>
           </Link>
-          <Button size="icon" variant="ghost" aria-label={t("prev")} title={t("prev")} onClick={p.prev}><SkipBack className="rtl:rotate-180" /></Button>
-          <Button size="icon" aria-label={p.error ? t("retry") : p.playing ? t("pause") : t("play")} onClick={p.toggle}>
+          <Button size="icon" variant="ghost" aria-label={t("prev")} title={t("prev")} onClick={p.prev}><SkipBack className="h-4 w-4 rtl:rotate-180" /></Button>
+          <Button size="icon" aria-label={p.error ? t("retry") : p.playing ? t("pause") : t("play")} title={p.playing ? t("pause") : t("play")} onClick={p.toggle}>
             {p.error ? <RotateCw className="h-4 w-4" /> : p.playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
-          <Button size="icon" variant="ghost" aria-label={t("next")} title={t("next")} onClick={p.next}><SkipForward className="rtl:rotate-180" /></Button>
+          <Button size="icon" variant="ghost" aria-label={t("next")} title={t("next")} onClick={p.next}><SkipForward className="h-4 w-4 rtl:rotate-180" /></Button>
           <Button size="icon" variant="ghost" aria-label={t("shuffle")} title={t("shuffle")} onClick={() => void p.playRandomSurah()}><Shuffle className="h-4 w-4" /></Button>
-          <Button size="icon" variant="ghost" aria-label={t("nextSurah")} title={t("nextSurah")} disabled={tr.s === 114} onClick={p.nextSurah}><ChevronsRight className="rtl:rotate-180" /></Button>
-          <Button size="icon" variant="ghost" aria-label={t("close")} onClick={p.stop}><X /></Button>
+          <Button size="icon" variant="ghost" aria-label={`${t("repeat")}: ${repeatLabel}`} title={`${t("repeat")}: ${repeatLabel}`} aria-pressed={p.repeat !== "off"} className={p.repeat !== "off" ? "text-primary" : "text-muted-foreground"} onClick={cycleRepeat}><Repeat className="h-4 w-4" /></Button>
+          <Button size="icon" variant="ghost" aria-label={t("close")} title={t("close")} onClick={p.stop}><X /></Button>
         </div>
       </div>
     </div>
@@ -117,15 +126,15 @@ export function SurahRow({ n }: { n: number }) {
       </span>
        <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 font-semibold">
-          <span className="truncate">{s.tr}</span>
+          <span className="truncate">{surahName(s, lang)}</span>
           {favorite && <Heart className="h-4 w-4 shrink-0 text-favorite" fill="currentColor" role="img" aria-label={t("favorite")} />}
           {saved && <CloudCheck className="h-4 w-4 shrink-0 text-success" role="img" aria-label={t("downloaded")} />}
         </div>
         <div className="text-xs text-muted-foreground">
-          {lang !== "ar" && `${s.en} · `}{num(s.ayahs)} {t("ayahs")} · {t(s.type === "Meccan" ? "meccan" : "medinan")}
+          {lang === "en" && `${s.en} · `}{num(s.ayahs)} {t("ayahs")} · {t(s.type === "Meccan" ? "meccan" : "medinan")}
         </div>
       </div>
-      <span dir="rtl" className="font-quran hidden text-xl text-primary sm:block">{s.ar.replace("سُورَةُ ", "")}</span>
+      {lang !== "ar" && <span dir="rtl" className="font-quran hidden text-xl text-primary sm:block">{s.ar.replace("سُورَةُ ", "")}</span>}
     </Link>
     <SurahActions n={n} favorite={favorite} saved={saved} busy={busy} />
     </div>
