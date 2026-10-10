@@ -4,9 +4,12 @@
 - [x] 06 Audio (core): reciters, play/next/prev, speed, repeat ayah/surah, mini-player
 - [x] 08 FR/EN/AR + RTL (core)
 - [x] 09 Search, history, favorites, bookmarks, progress, local stats
-- [ ] 06 Audio downloads for offline
-- [ ] 07 Offline / installable app (PWA)
+- [x] Current request: surah downloads, colored favorite/download icons, playlist, next-surah playback, favorite reciters, normalized Arabic search
+- [x] 06 Audio downloads for offline
+- [x] Current correction: repair surah downloads and restore the circular reciter carousel
+- [x] 07 Offline / installable app (PWA): offline banner, install button, save all 114 surahs
 - [ ] 10 Licensed reciter photos (needs licensed images)
+- [x] Current request: expand verified reciter selection and replace carousel initials with real portraits
 - [ ] 11 Visual UX polish pass
 - [ ] 12 Hifz (memorisation) V1.1
 - [ ] 13 Islamic AI V1.2

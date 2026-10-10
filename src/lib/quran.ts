@@ -21,19 +21,34 @@ export const RECITERS = [
   { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais", ar: "عبدالرحمن السديس" },
   { id: "ar.mahermuaiqly", name: "Maher Al-Muaiqly", ar: "ماهر المعيقلي" },
   { id: "ar.saoodshuraym", name: "Saud Ash-Shuraim", ar: "سعود الشريم" },
+  { id: "ar.ahmedajamy", name: "Ahmed Al-Ajmy", ar: "أحمد العجمي" },
+  { id: "ar.abdullahbasfar", name: "Abdullah Basfar", ar: "عبد الله بصفر" },
+  { id: "ar.muhammadayyoub", name: "Muhammad Ayyoub", ar: "محمد أيوب" },
+  { id: "ar.muhammadjibreel", name: "Muhammad Jibreel", ar: "محمد جبريل" },
 ];
 
 export type Ayah = { n: number; global: number; ar: string; tr?: string; audio: string };
+
+export const surahUrl = (n: number, lang: Lang, reciter: string) => {
+  const tr = TRANSLATIONS[lang];
+  const eds = ["quran-uthmani", reciter, ...(tr ? [tr.id] : [])].join(",");
+  return `${API}/surah/${n}/editions/${eds}`;
+};
 
 export const surahQuery = (n: number, lang: Lang, reciter: string) =>
   queryOptions({
     queryKey: ["surah", n, lang, reciter],
     staleTime: Infinity,
     queryFn: async (): Promise<Ayah[]> => {
-      const tr = TRANSLATIONS[lang];
-      const eds = ["quran-uthmani", reciter, ...(tr ? [tr.id] : [])].join(",");
-      const res = await fetch(`${API}/surah/${n}/editions/${eds}`);
-      if (!res.ok) throw new Error("network");
+      const url = surahUrl(n, lang, reciter);
+      let res: Response | undefined;
+      try {
+        res = await fetch(url);
+      } catch {
+        // Offline: fall back to text saved from Settings, even without a service worker.
+        if (typeof caches !== "undefined") res = await (await caches.open("cpf-data-v1")).match(url);
+      }
+      if (!res || !res.ok) throw new Error("network");
       const { data } = await res.json();
       const [text, audio, trans] = data;
       return text.ayahs.map((a: { numberInSurah: number; number: number; text: string }, i: number) => ({
@@ -52,15 +67,17 @@ const isArabic = (q: string) => /[\u0600-\u06FF]/.test(q);
 // Diacritic/letter-form insensitive normalisation (Arabic + Latin accents).
 export const normalize = (t: string) =>
   t
-    .normalize("NFD")
+    .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g, "")
     .replace(/[أإآٱ]/g, "ا")
+    .replace(/[۰-۹٠-٩]/g, (c) => String(c.charCodeAt(0) - (c >= "۰" ? 0x6f0 : 0x660)))
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
     .replace(/ؤ/g, "و")
     .replace(/ئ/g, "ي")
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/\s+/g, " ");
 
 type Indexed = { s: number; a: number; text: string; norm: string };
 export const editionQuery = (ed: string) =>
@@ -79,7 +96,7 @@ export const editionQuery = (ed: string) =>
   });
 
 export const searchEdition = (q: string, lang: Lang) =>
-  isArabic(q) ? "quran-simple-clean" : TRANSLATIONS[lang]?.id ?? TRANSLATIONS.fr!.id;
+  isArabic(q) ? "quran-simple-clean" : TRANSLATIONS[lang]?.id ?? "fr.hamidullah";
 
 export function runSearch(index: Indexed[], q: string): SearchHit[] {
   const n = normalize(q.trim());
@@ -92,4 +109,8 @@ export function runSearch(index: Indexed[], q: string): SearchHit[] {
 }
 
 export const surahName = (s: Surah, lang: Lang) => (lang === "ar" ? s.ar : s.tr);
-export const surah = (n: number): Surah => SURAHS[Math.min(Math.max(n, 1), 114) - 1]!;
+export const surah = (n: number): Surah => {
+  const s = SURAHS[Math.min(Math.max(n, 1), 114) - 1];
+  if (!s) throw new Error("Invalid surah");
+  return s;
+};
