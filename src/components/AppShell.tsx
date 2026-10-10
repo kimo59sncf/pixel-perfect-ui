@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { BookOpen, Heart, Home, Pause, Play, Search, Settings, SkipBack, SkipForward, X, RotateCw, ChevronsRight } from "lucide-react";
+import { BookOpen, CloudCheck, Heart, Home, Pause, Play, Search, Settings, SkipBack, SkipForward, Shuffle, X, RotateCw, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SurahActions } from "@/components/LibraryControls";
+import { useDownload } from "@/lib/downloads";
 import { useT, type TKey } from "@/lib/i18n";
 import { usePlayer } from "@/lib/player-context";
 import { surah } from "@/lib/quran";
 import { useOnline } from "@/lib/offline";
+import { useStore } from "@/lib/store";
 
 const tabs: { to: "/" | "/surahs" | "/search" | "/favorites" | "/settings"; icon: typeof Home; k: TKey }[] = [
   { to: "/", icon: Home, k: "home" },
@@ -83,6 +85,7 @@ function MiniPlayer() {
             {p.error ? <RotateCw className="h-4 w-4" /> : p.playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
           <Button size="icon" variant="ghost" aria-label={t("next")} title={t("next")} onClick={p.next}><SkipForward className="rtl:rotate-180" /></Button>
+          <Button size="icon" variant="ghost" aria-label={t("shuffle")} title={t("shuffle")} onClick={() => void p.playRandomSurah()}><Shuffle className="h-4 w-4" /></Button>
           <Button size="icon" variant="ghost" aria-label={t("nextSurah")} title={t("nextSurah")} disabled={tr.s === 114} onClick={p.nextSurah}><ChevronsRight className="rtl:rotate-180" /></Button>
           <Button size="icon" variant="ghost" aria-label={t("close")} onClick={p.stop}><X /></Button>
         </div>
@@ -102,6 +105,9 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
 
 export function SurahRow({ n }: { n: number }) {
   const { t, num, lang } = useT();
+  const reciter = useStore((s) => s.reciter);
+  const favorite = useStore((s) => (s.favoriteSurahs[s.reciter] ?? []).includes(n));
+  const { saved, busy } = useDownload(n, lang, reciter);
   const s = surah(n);
   return (
     <div className="flex flex-wrap items-center gap-x-2 border-b px-3 py-2">
@@ -110,14 +116,18 @@ export function SurahRow({ n }: { n: number }) {
         <span className="-rotate-45">{num(n)}</span>
       </span>
        <div className="min-w-0 flex-1">
-        <div className="font-semibold">{s.tr}</div>
+        <div className="flex items-center gap-1.5 font-semibold">
+          <span className="truncate">{s.tr}</span>
+          {favorite && <Heart className="h-4 w-4 shrink-0 text-favorite" fill="currentColor" role="img" aria-label={t("favorite")} />}
+          {saved && <CloudCheck className="h-4 w-4 shrink-0 text-success" role="img" aria-label={t("downloaded")} />}
+        </div>
         <div className="text-xs text-muted-foreground">
           {lang !== "ar" && `${s.en} · `}{num(s.ayahs)} {t("ayahs")} · {t(s.type === "Meccan" ? "meccan" : "medinan")}
         </div>
       </div>
       <span dir="rtl" className="font-quran hidden text-xl text-primary sm:block">{s.ar.replace("سُورَةُ ", "")}</span>
     </Link>
-    <SurahActions n={n} />
+    <SurahActions n={n} favorite={favorite} saved={saved} busy={busy} />
     </div>
   );
 }

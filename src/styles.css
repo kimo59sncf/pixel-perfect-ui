@@ -84,3 +84,22 @@
   background-image: radial-gradient(oklch(1 0 0 / 0.06) 1px, transparent 1.5px);
   background-size: 18px 18px;
 }
+
+@utility bg-hero-premium {
+  background-image:
+    radial-gradient(120% 120% at 18% 0%, oklch(0.52 0.1 78 / 0.45), transparent 55%),
+    linear-gradient(150deg, oklch(0.26 0.05 200), oklch(0.36 0.06 160));
+}
+
+@utility eq-bar {
+  display: block;
+  width: 3px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+
+@keyframes eq-bounce {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
